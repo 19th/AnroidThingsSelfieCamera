@@ -11,7 +11,6 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.media.Image;
 import android.media.ImageReader;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.Settings;
@@ -19,18 +18,19 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Date;
 
 public class SelfieCamera {
 
@@ -41,6 +41,8 @@ public class SelfieCamera {
 
     private static final int PREVIEW_WIDTH = 640;
     private static final int PREVIEW_HEIGHT = 480;
+
+    private Context appContext;
 
     private HandlerThread previewBackgroundThread;
     private Handler previewBackgroundHandler;
@@ -71,6 +73,8 @@ public class SelfieCamera {
     }
 
     public void openCamera(Context context, TextureView textureView) {
+        appContext = context;
+
         android_id = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
         cameraPreviewView = textureView;
 
@@ -91,7 +95,7 @@ public class SelfieCamera {
     }
 
     public void takePicture() {
-        Log.i(TAG, "takePicture");
+        toast("Taking picture");
 
         try {
             // This is the CaptureRequest.Builder that we use to take a picture.
@@ -108,7 +112,7 @@ public class SelfieCamera {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    Log.i(TAG, "onCaptureCompleted");
+                    Log.i(TAG, "Capture completed");
                     createPreviewSession();
                 }
             };
@@ -233,7 +237,7 @@ public class SelfieCamera {
             new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    Log.i(TAG, "onImageAvailable");
+                    Log.i(TAG, "Image available");
 
                     Image image = reader.acquireLatestImage();
                     // get image bytes
@@ -259,21 +263,22 @@ public class SelfieCamera {
             task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Uri downloadUrl = taskSnapshot.getUploadSessionUri();
-                    // mark image in the database
-                    Log.i(TAG, "Image upload successful");
-                    log.child("timestamp").setValue(ServerValue.TIMESTAMP);
-                    log.child("image").setValue(downloadUrl.toString());
+                    toast("Image upload successful");
+                    log.child("date").setValue(new Date().toString());
+                    log.child("image").setValue(imageRef.getDownloadUrl().toString());
                     log.child("android_id").setValue(android_id);
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    // clean up this entry
-                    Log.w(TAG, "Unable to upload image to Firebase");
+                    toast("Unable to upload image to Firebase");
                     log.removeValue();
                 }
             });
         }
+    }
+
+    private void toast(String text) {
+        Toast.makeText(appContext, text, Toast.LENGTH_SHORT).show();
     }
 }
