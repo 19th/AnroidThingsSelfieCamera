@@ -36,17 +36,21 @@ public class SelfieCamera {
 
     private static final String TAG = SelfieCamera.class.getSimpleName();
 
+    // saved image size
     private static final int IMAGE_WIDTH = 640;
     private static final int IMAGE_HEIGHT = 480;
 
+    // actual preview size
     private static final int PREVIEW_WIDTH = 640;
     private static final int PREVIEW_HEIGHT = 480;
 
     private Context appContext;
 
+    // thread for preview streaming
     private HandlerThread previewBackgroundThread;
     private Handler previewBackgroundHandler;
 
+    // thread for image saving
     private HandlerThread imageBackgroundThread;
     private Handler imageBackgroundHandler;
 
@@ -143,6 +147,7 @@ public class SelfieCamera {
         }
     }
 
+    // there should be exactly one id usually in AndroidThings
     private String getCameraId(CameraManager cameraManager) {
         String[] camIds;
         try {
@@ -231,7 +236,7 @@ public class SelfieCamera {
     }
 
     /**
-     * Listener for new camera images.
+     * Listener for new camera images
      */
     private ImageReader.OnImageAvailableListener onImageAvailableListener =
             new ImageReader.OnImageAvailableListener() {
@@ -251,7 +256,7 @@ public class SelfieCamera {
             };
 
     /**
-     * Upload image data to Firebase as a doorbell event.
+     * Upload image data to Firebase
      */
     private void uploadImage(final byte[] imageBytes) {
         if (imageBytes != null) {
