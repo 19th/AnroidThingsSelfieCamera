@@ -264,13 +264,13 @@ public class SelfieCamera {
             final StorageReference imageRef = firebaseStorage.getReference().child(log.getKey());
 
             // upload image to storage
-            UploadTask task = imageRef.putBytes(imageBytes);
+            final UploadTask task = imageRef.putBytes(imageBytes);
             task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     toast("Image upload successful");
                     log.child("date").setValue(new Date().toString());
-                    log.child("image").setValue(imageRef.getDownloadUrl().toString());
+                    log.child("image").setValue(taskSnapshot.getDownloadUrl().toString());
                     log.child("android_id").setValue(android_id);
                 }
             }).addOnFailureListener(new OnFailureListener() {
